@@ -11,28 +11,38 @@ class SensorParser(directoryPath: String) {
 
   val count = countFiles(File(directoryPath));
 
-  val groupData = processDirectory(directoryPath).groupBy(_.sensorId)
+  private lazy val groupData = processDirectory(directoryPath).groupBy(_.sensorId)
 
-  // val listData = processDirectory(directoryPath).toList.view.groupBy(_.sensorId)
+  val measurementSize = processDirectory(directoryPath).size
 
-  val avgHumidity = groupData.mapValues(group => group.map(_.humidity).flatMap(_.right.toOption).sum / group.size)
+  val avgHumidity = groupData.mapValues(group => group.map(_.humidity).flatMap(_.toOption).sum / group.size)
 
-  val minHumidity = groupData.mapValues(group => group.map(_.humidity).flatMap(_.right.toOption).reduceLeft((x, y) => x min y))
+  val minHumidity = groupData.mapValues(group => group.map(_.humidity).map(_.toOption).min).collect{case (k, Some(v)) => k -> v}
 
-  val maxHumidity = groupData.mapValues(group => group.map(_.humidity).flatMap(_.right.toOption).reduceLeft((x, y) => x max y))
+  val maxHumidity = groupData.mapValues(group => group.map(_.humidity).map(_.toOption).max).collect{case (k, Some(v)) => k -> v}
 
-  //Handle the NaN Sensor edge case
+    // val sortedGroup = groupData.mapValues(_.sortWith((a, b) => (a.humidity, b.humidity)
+  //   match {
+  //     case (Right(aVal), Right(bVal)) => aVal > bVal
+  //     case (Right(_), Left(bVal: String)) => false
+  //     case (Left(aVal: String), Right(_)) => false
+  //     case (Left(_), Left(_)) => true
+  //   }))
+  // def findHumidity(data: Map[String, List[Sensor]], f: (Seq[Option[Int]]) => Double) = {
+  //   data.mapValues(group => {
+  //       val humidityValues = group.map(_.humidity).flatMap(_.right.toOption)
+  //       if(humidityValues.isEmpty) 0.0 else f(humidityValues)
+  //   })
+  // }
+  // val avgHumidity = findHumidity(groupData, x => x.sum.toDouble / x.size)
+  // val minHumidity = findHumidity(groupData, _.min)
+  // val maxHumidity = findHumidity(groupData, _.max)
+
+  //Handle the NaN Sensor edge casex`
   val allNaNSensor = groupData.mapValues(group => group.filter(_.humidity.isLeft)).filter{case (_, v) => v.nonEmpty}
 
-  val sortedGroup = groupData.mapValues(_.sortWith((a, b) => (a.humidity, b.humidity)
-    match {
-      case (Right(aVal), Right(bVal)) => aVal > bVal
-      case (Right(_), Left(bVal: String)) => false
-      case (Left(aVal: String), Right(_)) => false
-      case (Left(_), Left(_)) => true
-    }))
 
-  def countFiles(dir: File): Int = {
+  private def countFiles(dir: File): Int = {
     val files = Try(dir.listFiles.filter(_.getName().endsWith(".csv"))).getOrElse(Array[File]())
     files.foldLeft(0) { (count, file) =>
         if (file.isFile) count + 1
@@ -73,14 +83,10 @@ class SensorParser(directoryPath: String) {
   }
 
   private def loadCSVFile(path: String): List[Map[String, String]] = {
-    println("processing")
-
     val file = Source.fromResource(path, classOf[SensorParser].getClassLoader)
 
     val reader = CSVReader.open(file)
     val data = reader.allWithHeaders()
-
-    println("number of records loaded")
 
     data
   }
