@@ -1,5 +1,5 @@
 
-package com.akinwalex.entities
+package com.akinwalex.sensorcsvprocessor.entities
 
 import scala.util.{Failure, Success, Try}
 

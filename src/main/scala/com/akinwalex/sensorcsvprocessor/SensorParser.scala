@@ -1,6 +1,6 @@
-package com.akinwalex
+package com.akinwalex.sensorcsvprocessor
 
-import com.akinwalex.entities.Sensor
+import com.akinwalex.sensorcsvprocessor.entities.Sensor
 import com.github.tototoshi.csv.{CSVReader, defaultCSVFormat}
 
 import java.io.File
