@@ -1,5 +1,5 @@
 
-package org.assignment.sensors.entities
+package com.akinwalex.entities
 
 import scala.util.{Failure, Success, Try}
 

@@ -1,7 +1,7 @@
-package org.assignment.sensors
+package com.akinwalex
 
+import com.akinwalex.entities.Sensor
 import com.github.tototoshi.csv.{CSVReader, defaultCSVFormat}
-import org.assignment.sensors.entities.Sensor
 
 import java.io.File
 import scala.io.Source

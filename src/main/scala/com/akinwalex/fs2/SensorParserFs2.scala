@@ -1,5 +1,4 @@
-package org.assignment.sensors.fs2
-
+package com.akinwalex.fs2
 
 import cats.effect.{Blocker, Concurrent, ExitCode, IO, IOApp}
 import fs2.*
