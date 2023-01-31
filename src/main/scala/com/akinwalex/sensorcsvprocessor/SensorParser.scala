@@ -51,7 +51,7 @@ class SensorParser(directoryPath: String) {
     }
   }
 
-  private def processDirectory(dir: String): List[Sensor] = {
+  def processDirectory(dir: String): List[Sensor] = {
 
     val files = new File(dir).listFiles().filter(_.isFile).toList
 
