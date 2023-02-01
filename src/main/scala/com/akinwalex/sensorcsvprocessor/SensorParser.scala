@@ -7,41 +7,24 @@ import java.io.File
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
-class SensorParser(directoryPath: String) {
-  def noOfCsvFilesInDirectory(dir: File): Int = {
-    val files = Try(dir.listFiles.filter(_.getName().endsWith(".csv"))).getOrElse(Array[File]())
-    files.foldLeft(0) { (count, file) =>
-        if (file.isFile) count + 1
-        else if (file.isDirectory) count + noOfCsvFilesInDirectory(file)
-        else count
-    }
-  }
-
-  def parseCsvFiles: List[Sensor] = {
+class SensorParser {
+  def getCsvFiles(directoryPath: String): List[String] = {
     val files = new File(directoryPath).listFiles().filter(_.isFile).toList
     for {
       file <- files if file.getName.endsWith(".csv")
-      f <- parseCsvToSensor(file.getName)
     } yield {
-      f
+      file.getAbsolutePath
     }
   }
-  private def parseCsvToSensor(filePath: String): List[Sensor] = {
-    loadCSVFile(filePath).flatMap( rowData =>
-      Sensor.parse(rowData) match {
-        case Success(Sensor(id, rt @ Right(r))) =>  Some(Sensor(id, rt))
-        case Success(Sensor(id, lt @ Left(l))) =>  Some(Sensor(id, lt))
-        case Failure(ex) => println("Unable to pass sensor" + s"of ${ex.getMessage} - row was $rowData")
-
-        None
-      }
-    )
-  }
-
-  private def loadCSVFile(path: String): List[Map[String, String]] = {
-    val file = Source.fromResource(path, classOf[SensorParser].getClassLoader)
+  def parseCsvFileToSensorData(path: String): LazyList[Sensor] = {
+    val file = Source.fromFile(path, "UTF-8")
     val reader = CSVReader.open(file)
-    val data = reader.allWithHeaders()
+    val data = reader.allWithHeaders().to(LazyList).flatMap { rowData =>
+      Sensor.parse(rowData) match
+        case Success(Sensor(id, rt @ Right(r) ) ) => Some(Sensor(id, rt))
+        case Success(Sensor(id, lt @Left(l) ) ) => Some(Sensor(id, lt))
+        case Failure(ex) => throw new Exception("Unable to parse sensor" + s"of ${ex.getMessage} - row was $rowData")
+    }
     data
   }
 }
