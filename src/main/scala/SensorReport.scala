@@ -13,17 +13,18 @@ class SensorReport(path: String) {
   lazy val sensorReadings: LazyList[Sensor] = csvFiles.flatMap(f => sensorParser.parseCsvFileToSensorData(f)).to(LazyList)
 
   private lazy val sensorsGroupedById = sensorReadings.groupBy(_.sensorId)
-  
-  val avgHumidity: MapView[String, Int] = sensorsGroupedById.view.mapValues(list => list.map(_.humidity.getOrElse(0)).sum / list.size)
 
-  val minHumidity: MapView[String, Int] = sensorsGroupedById.view.mapValues(list => list.map(_.humidity.getOrElse(0)).min)
+  def mapValuesWithOp(sensorsGroupedById: Map[String, LazyList[Sensor]], op: List[Int] => Int) =
+    sensorsGroupedById.view.mapValues(list => op(list.toList.map(_.humidity.getOrElse(0))))
 
-  val maxHumidity: MapView[String, Int] = sensorsGroupedById.view.mapValues(list => list.map(_.humidity.getOrElse(0)).max)
+  val avgHumidity: MapView[String, Int] = mapValuesWithOp(sensorsGroupedById, list => list.sum / list.size)
+  val minHumidity: MapView[String, Int] = mapValuesWithOp(sensorsGroupedById, list => list.min)
+  val maxHumidity: MapView[String, Int] = mapValuesWithOp(sensorsGroupedById, list => list.max)
 
   val failedSensors: MapView[String, LazyList[Sensor]] = sensorsGroupedById.view.mapValues(list => list.filter(_.humidity.isLeft)).filter { case (_, v) => v.nonEmpty }
 
   private val sensorResult = (avgHumidity :: minHumidity :: maxHumidity :: Nil)
-    .flatMap(_.toList).groupBy(_._1).mapValues(_.map(_._2)).to(LazyList)
+    .flatMap(_.toList).groupBy(_._1).view.mapValues(_.map(_._2)).to(LazyList)
 
 
   val aggregateSensorData: LazyList[SensorAggregateData] = sensorResult map {
