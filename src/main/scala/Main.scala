@@ -1,20 +1,20 @@
-package com.akinwalex.sensorcsvprocessor
 
+import cats.effect._
 import com.akinwalex.sensorcsvprocessor.entities.SensorReport
 
-object Main {
-  def main(args: Array[String]): Unit = {
+object Main extends IOApp {
 
-    val sensorReport = SensorReport(args(0))
+  override def run(args: List[String]): IO[ExitCode] =
+    val sensorReport = SensorReport(args.head)
+    for {
+      _ <- IO.println(sensorReport.aggregateSensorData)
+      _ <- IO.println("```")
+      _ <- IO.println(s"Number of processed file: ${sensorReport.csvFiles.size}")
+      _ <- IO.println(s"number of processed measurement: ${sensorReport.sensorReadings.size} ")
+      _ <- IO.println(s"Number of failed measurement: ${sensorReport.failedSensors.size} ")
+      _ <- IO.println("sensor-id,min,avg,max")
+      _ <- IO.println("```")
+      _ <- IO.println(sensorReport.report.foreach(println))
 
-    println(sensorReport.aggregateSensorData)
-    println("```")
-    println(s"Number of processed file: ${sensorReport.csvFiles.size}")
-    println(s"number of processed measurement: ${sensorReport.sensorReadings.size} ")
-    println(s"Number of failed measurement: ${sensorReport.failedSensors.size} ")
-    println("sensor-id,min,avg,max")
-    sensorReport.report.foreach(println)
-    println("```")
-  }
+    } yield ExitCode.Success
 }
-  
