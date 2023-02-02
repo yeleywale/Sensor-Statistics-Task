@@ -9,7 +9,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import java.net.URLDecoder
 
 
-class SensorLeaderParserTest extends AnyFlatSpec with BeforeAndAfter with ScalaCheckPropertyChecks {
+class SensorParserTest extends AnyFlatSpec with BeforeAndAfter with ScalaCheckPropertyChecks {
    var sensorReport: SensorReport = _
    var pathToResourceDirectory: String  = _
    before {
